@@ -29,20 +29,36 @@ var projCMakeListTempl string = "cmake_minimum_required(VERSION {{.MinVersion}})
 
 // /////////////////////////////////////////////////////////////////////////////
 type ExeCMakeLists struct {
+	Exe      bool
 	ExeName  string
 	Flags    []string
 	Standard string
-	Lib      bool // TODO: link lib if one is being created
+	Lib      bool
+	LibName  string
 }
 
-var ExeCMakeListTempl string = "add_executable({{.ExeName}} main.c)\n\n" +
+var ExeCMakeListTempl string = "{{ if .Lib }}add_subdirectory({{.LibName}}){{ end }}" +
+	"{{ if .Exe }}\n\nadd_executable({{.ExeName}} main.c)\n\n" +
 	"set_target_properties({{.ExeName}} PROPERTIES C_STANDARD {{.Standard}})\n\n" +
 	"target_compile_options({{.ExeName}}\n" +
 	"\tPRIVATE\n" +
 	"{{ range .Flags }}" +
 	"\t\t{{.}}\n" +
 	"{{ end }}" +
-	")"
+	")" +
+	"{{ if .Lib }}\n\ntarget_link_libraries({{.ExeName}} PRIVATE {{.LibName}}){{ end }}{{ end }}"
+
+// /////////////////////////////////////////////////////////////////////////////
+
+//	                                                                          //
+//						        MAIN.C TEMPLATE                               //
+//	                                                                          //
+
+// /////////////////////////////////////////////////////////////////////////////
+var MainDotCTempl string = "{{ if .Lib }}#include \"{{.LibName}}.h\"\n\n" +
+	"{{ else }}#include <stdlib.h>\n\n{{ end }}" +
+	"int main(int argc, char* argv[]) { " +
+	"return {{ if .Lib }}lib_func(){{ else }}EXIT_SUCCESS{{ end }}; }"
 
 // /////////////////////////////////////////////////////////////////////////////
 
@@ -58,7 +74,7 @@ type LibCMakeLists struct {
 }
 
 var LibCMakeListTempl string = "add_library({{.LibName}} {{.LibName}}.c)\n\n" +
-	"target_include_directories({{.LibName}} PRIVATE include)\n\n" +
+	"target_include_directories({{.LibName}} PUBLIC include)\n\n" +
 	"set_target_properties({{.LibName}} PROPERTIES C_STANDARD {{.Standard}})\n\n" +
 	"target_compile_options({{.LibName}}\n" +
 	"\tPRIVATE\n" +
@@ -78,7 +94,7 @@ type LibDotC struct {
 	LibName string
 }
 
-var LibDotCTempl string = "#include {{.LibName}}.h\n"
+var LibDotCTempl string = "#include \"{{.LibName}}.h\"\n"
 
 // /////////////////////////////////////////////////////////////////////////////
 
@@ -92,7 +108,8 @@ type LibDotH struct {
 }
 
 var LibDotHTempl string = "#ifndef {{.LibName}}_H\n" +
-	"#define {{.LibName}}_H\n\n\n\n" +
+	"#define {{.LibName}}_H\n\n" +
+	"int lib_func(void) {\n\treturn 1;\n}\n\n" +
 	"#endif //{{.LibName}}_H"
 
 // /////////////////////////////////////////////////////////////////////////////

@@ -12,7 +12,7 @@ const (
 	libDefault      bool    = true
 	libDescrip      string  = "include a library in the project (default = true)"
 	libNameDefault  string  = ""
-	libNameDescrip          = "library name, if included. Defaults to project name"
+	libNameDescrip          = "library name, if included. Defaults to 'lib'+project name"
 	exeDefault      bool    = true
 	exeDescrip      string  = "include an executable in the project (default = true)"
 	exeNameDefault  string  = ""

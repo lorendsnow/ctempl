@@ -11,7 +11,7 @@ import (
 	"github.com/lorendsnow/ctempl/internal/folder"
 )
 
-//go:embed files/root/* files/src/* files/tests/*
+//go:embed files/root/* files/tests/*
 var f embed.FS
 
 type CProject struct {
@@ -86,7 +86,7 @@ func (p *CProject) createRoot() error {
 }
 
 func (p *CProject) createSrc() error {
-	if !*p.exe {
+	if !*p.exe && !*p.lib {
 		if err := folder.CreateFolder("src", nil, "", nil); err != nil {
 			return err
 		}
@@ -94,24 +94,46 @@ func (p *CProject) createSrc() error {
 		return nil
 	}
 
+	templates := make([]*folder.TemplateFile, 0, 2)
+
 	exeTemplStruct := &ExeCMakeLists{
+		Exe:      *p.exe,
 		ExeName:  *p.exeName,
 		Flags:    p.exeFlags,
 		Standard: *p.std,
+		Lib:      *p.lib,
+		LibName:  *p.libName,
 	}
 
-	tmpl, err := template.New("Exe CMake CMakeLists.txt").Parse(ExeCMakeListTempl)
+	cmakeTmpl, err := template.New("Exe CMake CMakeLists.txt").Parse(ExeCMakeListTempl)
 	if err != nil {
 		return fmt.Errorf("failed to create CMakeLists.txt template for project folder: %w", err)
 	}
 
-	tmplFile := &folder.TemplateFile{
+	cmakeTmplFile := &folder.TemplateFile{
 		Filename: "CMakeLists.txt",
-		Tmpl:     tmpl,
+		Tmpl:     cmakeTmpl,
 		TmplData: exeTemplStruct,
 	}
 
-	if err := folder.CreateFolder("src", []*folder.TemplateFile{tmplFile}, "files/src", &f); err != nil {
+	templates = append(templates, cmakeTmplFile)
+
+	if *p.exe {
+		mainTmpl, err := template.New("Main.c").Parse(MainDotCTempl)
+		if err != nil {
+			return fmt.Errorf("failed to create main.c template for src folder: %w", err)
+		}
+
+		mainTmplFile := &folder.TemplateFile{
+			Filename: "main.c",
+			Tmpl:     mainTmpl,
+			TmplData: exeTemplStruct,
+		}
+
+		templates = append(templates, mainTmplFile)
+	}
+
+	if err := folder.CreateFolder("src", templates, "", nil); err != nil {
 		return err
 	}
 
@@ -241,7 +263,8 @@ func NewCProject(args []string) *CProject {
 	project.projName = args[len(args)-1]
 
 	if *(project.lib) && *(project.libName) == "" {
-		project.libName = &project.projName
+		libName := "lib" + project.projName
+		project.libName = &libName
 	}
 
 	if *(project.exe) && *(project.exeName) == "" {
