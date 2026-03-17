@@ -51,7 +51,7 @@ func (p *CProject) Run() error {
 }
 
 func (p *CProject) createRoot() error {
-	projTemplStruct := &ProjCMakeLists{
+	projData := &ProjData{
 		MinVersion:  *p.cmakeVer,
 		Compiler:    *p.compiler,
 		ProjectName: p.projName,
@@ -65,7 +65,7 @@ func (p *CProject) createRoot() error {
 	tmplFile := &folder.TemplateFile{
 		Filename: "CMakeLists.txt",
 		Tmpl:     tmpl,
-		TmplData: projTemplStruct,
+		TmplData: projData,
 	}
 
 	if err := folder.CreateFolder(
@@ -96,7 +96,7 @@ func (p *CProject) createSrc() error {
 
 	templates := make([]*folder.TemplateFile, 0, 2)
 
-	exeTemplStruct := &ExeCMakeLists{
+	srcData := &SrcData{
 		Exe:      *p.exe,
 		ExeName:  *p.exeName,
 		Flags:    p.exeFlags,
@@ -105,7 +105,7 @@ func (p *CProject) createSrc() error {
 		LibName:  *p.libName,
 	}
 
-	cmakeTmpl, err := template.New("Exe CMake CMakeLists.txt").Parse(ExeCMakeListTempl)
+	cmakeTmpl, err := template.New("Exe CMake CMakeLists.txt").Parse(SrcCMakeListTempl)
 	if err != nil {
 		return fmt.Errorf("failed to create CMakeLists.txt template for project folder: %w", err)
 	}
@@ -113,7 +113,7 @@ func (p *CProject) createSrc() error {
 	cmakeTmplFile := &folder.TemplateFile{
 		Filename: "CMakeLists.txt",
 		Tmpl:     cmakeTmpl,
-		TmplData: exeTemplStruct,
+		TmplData: srcData,
 	}
 
 	templates = append(templates, cmakeTmplFile)
@@ -127,7 +127,7 @@ func (p *CProject) createSrc() error {
 		mainTmplFile := &folder.TemplateFile{
 			Filename: "main.c",
 			Tmpl:     mainTmpl,
-			TmplData: exeTemplStruct,
+			TmplData: srcData,
 		}
 
 		templates = append(templates, mainTmplFile)
@@ -143,7 +143,7 @@ func (p *CProject) createSrc() error {
 func (p *CProject) createLib() error {
 	templates := make([]*folder.TemplateFile, 0, 3)
 
-	libCMakeTmplStruct := &LibCMakeLists{
+	libData := &LibData{
 		LibName:  *p.libName,
 		Flags:    p.exeFlags,
 		Standard: *p.std,
@@ -157,12 +157,10 @@ func (p *CProject) createLib() error {
 	cmakeTmplFile := &folder.TemplateFile{
 		Filename: "CMakeLists.txt",
 		Tmpl:     cmakeTmpl,
-		TmplData: libCMakeTmplStruct,
+		TmplData: libData,
 	}
 
 	templates = append(templates, cmakeTmplFile)
-
-	libDotCTmplStruct := &LibDotC{*p.libName}
 
 	dotCTmpl, err := template.New("Lib .C file").Parse(LibDotCTempl)
 	if err != nil {
@@ -172,12 +170,10 @@ func (p *CProject) createLib() error {
 	dotCTmplFile := &folder.TemplateFile{
 		Filename: *p.libName + ".c",
 		Tmpl:     dotCTmpl,
-		TmplData: libDotCTmplStruct,
+		TmplData: libData,
 	}
 
 	templates = append(templates, dotCTmplFile)
-
-	libDotHTmplStruct := &LibDotH{strings.ToUpper(*p.libName)}
 
 	dotHTmpl, err := template.New("Lib .H file").Parse(LibDotHTempl)
 	if err != nil {
@@ -187,7 +183,7 @@ func (p *CProject) createLib() error {
 	dotHTmplFile := &folder.TemplateFile{
 		Filename: *p.libName + ".h",
 		Tmpl:     dotHTmpl,
-		TmplData: libDotHTmplStruct,
+		TmplData: libData,
 	}
 
 	templates = append(templates, dotHTmplFile)
@@ -210,7 +206,7 @@ func (p *CProject) createTests() error {
 
 	templates := make([]*folder.TemplateFile, 0, 1)
 
-	testCMakeTmplStruct := &TestCMakeLists{
+	testData := &TestData{
 		Flags:    p.exeFlags,
 		Standard: *p.std,
 	}
@@ -223,7 +219,7 @@ func (p *CProject) createTests() error {
 	tmplFile := &folder.TemplateFile{
 		Filename: "CMakeLists.txt",
 		Tmpl:     tmpl,
-		TmplData: testCMakeTmplStruct,
+		TmplData: testData,
 	}
 
 	templates = append(templates, tmplFile)

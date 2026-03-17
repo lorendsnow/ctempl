@@ -7,7 +7,7 @@ package cproject
 //	                                                                          //
 
 // /////////////////////////////////////////////////////////////////////////////
-type ProjCMakeLists struct {
+type ProjData struct {
 	MinVersion  float64
 	Compiler    string
 	ProjectName string
@@ -28,7 +28,7 @@ var projCMakeListTempl string = "cmake_minimum_required(VERSION {{.MinVersion}})
 //	                                                                          //
 
 // /////////////////////////////////////////////////////////////////////////////
-type ExeCMakeLists struct {
+type SrcData struct {
 	Exe      bool
 	ExeName  string
 	Flags    []string
@@ -37,7 +37,7 @@ type ExeCMakeLists struct {
 	LibName  string
 }
 
-var ExeCMakeListTempl string = "{{ if .Lib }}add_subdirectory({{.LibName}}){{ end }}" +
+var SrcCMakeListTempl string = "{{ if .Lib }}add_subdirectory({{.LibName}}){{ end }}" +
 	"{{ if .Exe }}\n\nadd_executable({{.ExeName}} main.c)\n\n" +
 	"set_target_properties({{.ExeName}} PROPERTIES C_STANDARD {{.Standard}})\n\n" +
 	"target_compile_options({{.ExeName}}\n" +
@@ -67,7 +67,7 @@ var MainDotCTempl string = "{{ if .Lib }}#include \"{{.LibName}}.h\"\n\n" +
 //	                                                                          //
 
 // /////////////////////////////////////////////////////////////////////////////
-type LibCMakeLists struct {
+type LibData struct {
 	LibName  string
 	Flags    []string
 	Standard string
@@ -90,10 +90,6 @@ var LibCMakeListTempl string = "add_library({{.LibName}} {{.LibName}}.c)\n\n" +
 //	                                                                          //
 
 // /////////////////////////////////////////////////////////////////////////////
-type LibDotC struct {
-	LibName string
-}
-
 var LibDotCTempl string = "#include \"{{.LibName}}.h\"\n"
 
 // /////////////////////////////////////////////////////////////////////////////
@@ -103,10 +99,6 @@ var LibDotCTempl string = "#include \"{{.LibName}}.h\"\n"
 //	                                                                          //
 
 // /////////////////////////////////////////////////////////////////////////////
-type LibDotH struct {
-	LibName string
-}
-
 var LibDotHTempl string = "#ifndef {{.LibName}}_H\n" +
 	"#define {{.LibName}}_H\n\n" +
 	"int lib_func(void) {\n\treturn 1;\n}\n\n" +
@@ -119,7 +111,7 @@ var LibDotHTempl string = "#ifndef {{.LibName}}_H\n" +
 //	                                                                          //
 
 // /////////////////////////////////////////////////////////////////////////////
-type TestCMakeLists struct {
+type TestData struct {
 	Flags    []string
 	Standard string
 }
