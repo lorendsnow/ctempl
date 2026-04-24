@@ -8,7 +8,7 @@ package cproject
 
 // /////////////////////////////////////////////////////////////////////////////
 type ProjData struct {
-	MinVersion  float64
+	MinVersion  string
 	Compiler    string
 	ProjectName string
 }

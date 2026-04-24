@@ -4,12 +4,22 @@ import (
 	"embed"
 	"flag"
 	"fmt"
+	"math"
 	"os"
 	"strings"
 	"text/template"
 
 	"github.com/lorendsnow/ctempl/internal/folder"
 )
+
+// formatCMakeVersion formats a float64 cmake version so that whole numbers
+// always include a decimal point (e.g. 4 → "4.0", 3.25 → "3.25").
+func formatCMakeVersion(v float64) string {
+	if v == math.Trunc(v) {
+		return fmt.Sprintf("%.1f", v)
+	}
+	return fmt.Sprintf("%g", v)
+}
 
 //go:embed files/root/* files/tests/*
 var f embed.FS
@@ -52,7 +62,7 @@ func (p *CProject) Run() error {
 
 func (p *CProject) createRoot() error {
 	projData := &ProjData{
-		MinVersion:  *p.cmakeVer,
+		MinVersion:  formatCMakeVersion(*p.cmakeVer),
 		Compiler:    *p.compiler,
 		ProjectName: p.projName,
 	}
